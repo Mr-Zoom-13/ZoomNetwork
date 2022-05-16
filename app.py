@@ -26,7 +26,6 @@ def login():
         user = db_ses.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
-            print(user.id)
             session['id'] = user.id
             return redirect(f'/main/{session["id"]}')
         return render_template('login.html',
@@ -62,8 +61,10 @@ def register():
         user.set_password(form.password.data)
         db_ses.add(user)
         db_ses.commit()
-        print(db_ses.query(User).filter(User.user == user).first().id)
-        session['id'] = db_ses.query(User).filter(User.user == user).first().id
+        this_user = db_ses.query(User).filter(User.email == form.email.data).first()
+        print(this_user.id)
+        login_user(this_user)
+        session['id'] = this_user.id
         return redirect(f'/main/{session["id"]}')
     return render_template('register.html', form=form, user=current_user)
 
@@ -71,12 +72,16 @@ def register():
 @app.route('/main/<int:id>', methods=['GET', 'POST'])
 @login_required
 def profile(id):
+    user = db_ses.query(User).filter(User.id == id).first()
     if request.method == 'POST':
         if 'my_prof' in request.form:
             return redirect(f'/main/{session["id"]}')
-    return render_template('profile.html', id=id)
+    return render_template('profile.html', user=user)
 
 
 if __name__ == '__main__':
+    for i in db_ses.query(User).all():
+        i.last_seen = ' '
+        i.sid = '[]'
     socket_app.on_namespace(SocketClass('/main'))
     socket_app.run(app, debug=True)

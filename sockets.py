@@ -1,6 +1,8 @@
-from config import thread_lock, socket_app, thread
-from flask import request
-from flask_socketio import SocketIO, Namespace, emit
+from config import thread_lock, socket_app, thread, db_ses
+from flask import request, current_app
+from flask_socketio import Namespace, emit
+from data.users import User
+import datetime
 
 
 def background_thread():
@@ -21,7 +23,32 @@ class SocketClass(Namespace):
             if thread is None:
                 thread = socket_app.start_background_task(background_thread)
         print('Client connected', request.sid)
-        emit('my_response', {'data': 'Connected', 'count': 0})
 
     def on_disconnect(self):
         print('Client disconnected', request.sid)
+
+    def on_add_sid(self, data):
+        id = int(data['data'].split('/')[-1])
+        print(id)
+        user = db_ses.query(User).filter(User.id == id).first()
+        user.last_seen = 'online'
+        if not user.sid:
+            temp_sid = [request.sid]
+        else:
+            temp_sid = eval(user.sid)
+            if request.sid not in temp_sid:
+                temp_sid.append(request.sid)
+        user.sid = str(temp_sid)
+        db_ses.commit()
+
+    def on_delete_sid(self, data):
+        id = int(data['data'].split('/')[-1])
+        print(id)
+        user = db_ses.query(User).filter(User.id == id).first()
+        tmp_sid = eval(user.sid)
+        index_delete = tmp_sid.index(request.sid)
+        del tmp_sid[index_delete]
+        user.sid = str(tmp_sid)
+        if not tmp_sid:
+            user.last_seen = str(datetime.date.today())
+        db_ses.commit()

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Profile {{ id }}</h1>
+<h1>Profile {{ user.id }}</h1>
+<h2>{{ user.last_seen }}</h2>
 {% endblock %}

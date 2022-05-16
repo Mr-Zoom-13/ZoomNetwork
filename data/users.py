@@ -23,7 +23,7 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     activity_info = sqlalchemy.Column(sqlalchemy.String)
     activity_to = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('users.id'))
     last_seen = sqlalchemy.Column(sqlalchemy.String)
-    cid = sqlalchemy.Column(sqlalchemy.String)
+    sid = sqlalchemy.Column(sqlalchemy.String)
     user = orm.relation('User')
 
     def set_password(self, password):
