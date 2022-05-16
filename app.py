@@ -28,7 +28,7 @@ def login():
             login_user(user)
             print(user.id)
             session['id'] = user.id
-            return redirect("/main")
+            return redirect(f'/main/{session["id"]}')
         return render_template('login.html',
                                message="Неправильный логин или пароль",
                                form=form, user=current_user)
@@ -64,17 +64,19 @@ def register():
         db_ses.commit()
         print(db_ses.query(User).filter(User.user == user).first().id)
         session['id'] = db_ses.query(User).filter(User.user == user).first().id
-        return redirect('/main')
+        return redirect(f'/main/{session["id"]}')
     return render_template('register.html', form=form, user=current_user)
 
 
-@app.route('/main')
+@app.route('/main/<int:id>', methods=['GET', 'POST'])
 @login_required
-def main_page():
-    print(session['id'])
-    return render_template('main.html')
+def profile(id):
+    if request.method == 'POST':
+        if 'my_prof' in request.form:
+            return redirect(f'/main/{session["id"]}')
+    return render_template('profile.html', id=id)
 
 
 if __name__ == '__main__':
     socket_app.on_namespace(SocketClass('/main'))
-    socket_app.run(app)
+    socket_app.run(app, debug=True)
