@@ -76,12 +76,13 @@ def profile(id):
     if request.method == 'POST':
         if 'my_prof' in request.form:
             return redirect(f'/main/{session["id"]}')
-    return render_template('profile.html', user=user)
+    if user.id == session['id']:
+        return render_template('profile.html', user=user, owner=True)
+    return render_template('profile.html', user=user, owner=False)
 
 
 if __name__ == '__main__':
     for i in db_ses.query(User).all():
-        i.last_seen = ' '
         i.sid = '[]'
     socket_app.on_namespace(SocketClass('/main'))
     socket_app.run(app, debug=True)

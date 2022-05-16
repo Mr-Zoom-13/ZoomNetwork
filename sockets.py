@@ -1,5 +1,5 @@
 from config import thread_lock, socket_app, thread, db_ses
-from flask import request, current_app
+from flask import request, session
 from flask_socketio import Namespace, emit
 from data.users import User
 import datetime
@@ -27,8 +27,8 @@ class SocketClass(Namespace):
     def on_disconnect(self):
         print('Client disconnected', request.sid)
 
-    def on_add_sid(self, data):
-        id = int(data['data'].split('/')[-1])
+    def on_add_sid(self):
+        id = session['id']
         print(id)
         user = db_ses.query(User).filter(User.id == id).first()
         user.last_seen = 'online'
@@ -40,9 +40,10 @@ class SocketClass(Namespace):
                 temp_sid.append(request.sid)
         user.sid = str(temp_sid)
         db_ses.commit()
+        emit('user_update', {'data': user.id, 'last_seen': user.last_seen}, broadcast=True)
 
-    def on_delete_sid(self, data):
-        id = int(data['data'].split('/')[-1])
+    def on_delete_sid(self):
+        id = session['id']
         print(id)
         user = db_ses.query(User).filter(User.id == id).first()
         tmp_sid = eval(user.sid)
