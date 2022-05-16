@@ -87,4 +87,4 @@ if __name__ == '__main__':
     for i in db_ses.query(User).all():
         i.sid = '[]'
     socket_app.on_namespace(SocketClass('/main'))
-    socket_app.run(app, debug=True)
+    socket_app.run(app)
