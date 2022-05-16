@@ -1,6 +1,6 @@
-from flask import render_template, redirect, session, request
+from flask import render_template, redirect, request
 from flask_login import login_user, current_user, login_required, logout_user
-from config import socket_app, app, db_ses, login_manager
+from config import socket_app, app, db_ses, login_manager, work_with_session
 from sockets import SocketClass
 from forms.login import LoginForm
 from forms.register import RegisterForm
@@ -26,8 +26,9 @@ def login():
         user = db_ses.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
-            session['id'] = user.id
-            return redirect(f'/main/{session["id"]}')
+            work_with_session.set_new_value('id', user.id)
+            print('FFFFFF', work_with_session.get_value('id'))
+            return redirect(f'/main/{work_with_session.get_value("id")}')
         return render_template('login.html',
                                message="Неправильный логин или пароль",
                                form=form, user=current_user)
@@ -64,8 +65,8 @@ def register():
         this_user = db_ses.query(User).filter(User.email == form.email.data).first()
         print(this_user.id)
         login_user(this_user)
-        session['id'] = this_user.id
-        return redirect(f'/main/{session["id"]}')
+        work_with_session.set_new_value('id', this_user.id)
+        return redirect(f'/main/{work_with_session.get_value("id")}')
     return render_template('register.html', form=form, user=current_user)
 
 
@@ -75,8 +76,9 @@ def profile(id):
     user = db_ses.query(User).filter(User.id == id).first()
     if request.method == 'POST':
         if 'my_prof' in request.form:
-            return redirect(f'/main/{session["id"]}')
-    if user.id == session['id']:
+            return redirect(f'/main/{work_with_session.get_value("id")}')
+    print(work_with_session.get_value("id"))
+    if user.id == work_with_session.get_value("id"):
         return render_template('profile.html', user=user, owner=True)
     return render_template('profile.html', user=user, owner=False)
 

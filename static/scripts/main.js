@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    var socket = io('http://localhost:5000/main');
+    var socket = io('https://fbb9-94-41-167-123.ngrok.io/main');
 
     socket.on('connect', function () {
         socket.emit('add_sid');
