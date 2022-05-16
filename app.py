@@ -1,15 +1,80 @@
-from flask import render_template
-from config import socket_app, app
+from flask import render_template, redirect, session, request
+from flask_login import login_user, current_user, login_required, logout_user
+from config import socket_app, app, db_ses, login_manager
 from sockets import SocketClass
+from forms.login import LoginForm
+from forms.register import RegisterForm
+from data.users import User
 
 
-@app.route('/')
-def index():
-    return render_template('index.html', async_mode=socket_app.async_mode)
+@login_manager.user_loader
+def load_user(user_id):
+    return db_ses.query(User).get(user_id)
 
 
-socket_app.on_namespace(SocketClass('/'))
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect("/")
+
+
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = db_ses.query(User).filter(User.email == form.email.data).first()
+        if user and user.check_password(form.password.data):
+            login_user(user)
+            print(user.id)
+            session['id'] = user.id
+            return redirect("/main")
+        return render_template('login.html',
+                               message="Неправильный логин или пароль",
+                               form=form, user=current_user)
+    return render_template('login.html', form=form, user=current_user)
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        try:
+            if form.password.data != form.password_again.data:
+                return render_template('register.html',
+                                       form=form,
+                                       message="Пароли не совпадают", user=current_user)
+            elif int(form.age.data) <= 0:
+                return render_template('register.html',
+                                       form=form,
+                                       message="Неверный возраст", user=current_user)
+            elif db_ses.query(User).filter(User.email == form.email.data).first():
+                return render_template('register.html',
+                                       form=form,
+                                       message="Аккаунт с данной почтой уже зарегистрирован",
+                                       user=current_user)
+        except ValueError:
+            return render_template('register.html',
+                                   form=form,
+                                   message="Неверный возраст", user=current_user)
+        user = User(email=form.email.data, surname=form.surname.data, name=form.name.data,
+                    age=form.age.data)
+        user.set_password(form.password.data)
+        db_ses.add(user)
+        db_ses.commit()
+        print(db_ses.query(User).filter(User.user == user).first().id)
+        session['id'] = db_ses.query(User).filter(User.user == user).first().id
+        return redirect('/main')
+    return render_template('register.html', form=form, user=current_user)
+
+
+@app.route('/main')
+@login_required
+def main_page():
+    print(session['id'])
+    return render_template('main.html')
 
 
 if __name__ == '__main__':
+    socket_app.on_namespace(SocketClass('/main'))
     socket_app.run(app)
