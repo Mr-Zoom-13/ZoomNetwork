@@ -7,7 +7,6 @@ from session import WorkWithSession
 from flask_session import Session
 
 
-
 app = Flask(__name__, static_url_path='/static')
 app.config['SECRET_KEY'] = 'my_config_secret_zoom'
 app.config['SESSION_TYPE'] = 'filesystem'

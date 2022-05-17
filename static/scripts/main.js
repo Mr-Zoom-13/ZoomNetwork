@@ -1,7 +1,7 @@
 $(document).ready(function() {
-    var socket = io('http://1b50-79-140-31-217.ngrok.io/main');
+    var socket = io('https://flasktest.school-score.online/main');
 
-    socket.on('connect', function (event) {
+    socket.on('connect', function () {
         socket.emit('add_sid', {data: window.location.href});
     })
 

@@ -6,4 +6,5 @@ class WorkWithSession():
         session[key] = value
 
     def get_value(self, key):
+        print(session)
         return session[key]

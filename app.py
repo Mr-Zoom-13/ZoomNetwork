@@ -91,4 +91,4 @@ if __name__ == '__main__':
         i.sid = '[]'
     db_ses.commit()
     socket_app.on_namespace(SocketClass('/main'))
-    socket_app.run(app, debug=True)
+    socket_app.run(app)
