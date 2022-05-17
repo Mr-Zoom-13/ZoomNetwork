@@ -1,3 +1,5 @@
+import datetime
+
 from flask import render_template, redirect, request
 from flask_login import login_user, current_user, login_required, logout_user
 from config import socket_app, app, db_ses, login_manager, work_with_session
@@ -71,7 +73,6 @@ def register():
 
 
 @app.route('/main/<int:id>', methods=['GET', 'POST'])
-@login_required
 def profile(id):
     user = db_ses.query(User).filter(User.id == id).first()
     if request.method == 'POST':
@@ -85,6 +86,9 @@ def profile(id):
 
 if __name__ == '__main__':
     for i in db_ses.query(User).all():
+        if i.last_seen == 'online':
+            i.last_seen = str(datetime.date.today())
         i.sid = '[]'
+    db_ses.commit()
     socket_app.on_namespace(SocketClass('/main'))
-    socket_app.run(app)
+    socket_app.run(app, debug=True)

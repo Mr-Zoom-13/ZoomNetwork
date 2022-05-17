@@ -13,7 +13,7 @@ app.config['SECRET_KEY'] = 'my_config_secret_zoom'
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
 async_mode = None
-socket_app = SocketIO(app, async_mode=async_mode, manage_session=True)
+socket_app = SocketIO(app, async_mode=async_mode, manage_session=True, ping_timeout=200)
 thread = None
 thread_lock = Lock()
 db_session.global_init('db/network.db')
